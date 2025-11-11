@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale-1.0">
+    <title>Juego de Matemáticas Divertido</title>
+    <!-- Incluimos TailwindCSS para un diseño moderno -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Una fuente divertida y legible */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        /* Ocultar flechas en input de número */
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-purple-600 to-blue-500 min-h-screen flex items-center justify-center p-4">
+
+    <!-- Contenedor principal del juego -->
+    <div class="bg-white rounded-2xl shadow-2xl p-8 md:p-12 w-full max-w-lg text-center overflow-hidden">
+
+        <!-- Pantalla de Inicio (ID: start-screen) -->
+        <div id="start-screen">
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4">¡Math-Manía!</h1>
+            <p class="text-lg text-gray-600 mb-8">¡Aprende matemáticas jugando!</p>
+            <button id="play-btn" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-full text-xl shadow-lg transform transition-all hover:scale-105">
+                Jugar
+            </button>
+        </div>
+
+        <!-- Pantalla de Ingreso de Nombre (ID: name-screen) -->
+        <div id="name-screen" class="hidden">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6">¿Quién eres?</h2>
+            <p class="text-gray-600 mb-4">Ingresa tu nombre para el ranking.</p>
+            <input type="text" id="name-input" class="w-full border-2 border-gray-300 rounded-lg p-3 text-lg text-center focus:outline-none focus:border-purple-500" placeholder="Tu nombre...">
+            <p id="name-error" class="text-red-500 text-sm mt-2 hidden">Por favor, ingresa un nombre.</p>
+            <button id="name-submit-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-full text-xl shadow-lg transform transition-all hover:scale-105 mt-6">
+                Siguiente
+            </button>
+        </div>
+
+        <!-- Pantalla de Configuración del Juego (ID: setup-screen) -->
+        <div id="setup-screen" class="hidden">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6" id="welcome-name"></h2>
+            
+            <div class="mb-6">
+                <h3 class="text-xl font-semibold text-gray-700 mb-3">Elige la cantidad de preguntas:</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <button data-questions="5" class="game-option-btn bg-blue-500 hover:bg-blue-600">5 Preguntas</button>
+                    <button data-questions="10" class="game-option-btn bg-blue-500 hover:bg-blue-600">10 Preguntas</button>
+                    <button data-questions="15" class="game-option-btn bg-blue-500 hover:bg-blue-600">15 Preguntas</button>
+                    <button data-questions="20" class="game-option-btn bg-blue-500 hover:bg-blue-600">20 Preguntas</button>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-xl font-semibold text-gray-700 mb-3">O un desafío:</h3>
+                <button id="timed-mode-btn" class="game-option-btn bg-red-500 hover:bg-red-600 w-full">
+                    Contra el Reloj (60s)
+                </button>
+            </div>
+            
+            <!-- Característica de Gemini: Nuevo modo de juego -->
+            <div class="mt-6">
+                <h3 class="text-xl font-semibold text-gray-700 mb-3">O un desafío de IA:</h3>
+                <button id="gemini-mode-btn" class="game-option-btn bg-purple-600 hover:bg-purple-700 w-full">
+                    ✨ Problemas de Lógica (5)
+                </button>
+            </div>
+        </div>
+
+        <!-- Pantalla de Juego (ID: game-screen) -->
+        <div id="game-screen" class="hidden">
+            <div id="game-header" class="text-xl font-semibold text-gray-700 mb-4"></div>
+            <div id="problem-text" class="text-5xl md:text-6xl font-bold text-gray-800 my-10">
+                12 + 8 = ?
+            </div>
+            <input type="number" id="answer-input" class="w-full border-2 border-gray-300 rounded-lg p-3 text-3xl text-center focus:outline-none focus:border-green-500" placeholder="?">
+            <button id="submit-answer-btn" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-full text-xl shadow-lg transform transition-all hover:scale-105 mt-6">
+                Enviar
+            </button>
+        </div>
+
+        <!-- Pantalla de Resultados (ID: results-screen) -->
+        <div id="results-screen" class="hidden">
+            <h2 class="text-4xl font-bold text-gray-800 mb-4">¡Juego Terminado!</h2>
+            <div id="result-text" class="text-2xl text-gray-700 mb-4"></div>
+            <!-- Característica de Gemini: Mensaje de retroalimentación dinámico -->
+            <div id="result-message" class="text-xl font-semibold mb-8 text-gray-700 italic p-4 bg-gray-50 rounded-lg min-h-[50px]">
+                <div class="text-gray-500">✨ Generando consejo personalizado...</div>
+            </div>
+            <button id="show-ranking-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-full text-xl shadow-lg transform transition-all hover:scale-105">
+                Ver Ranking
+            </button>
+        </div>
+
+        <!-- Pantalla de Ranking (ID: ranking-screen) -->
+        <div id="ranking-screen" class="hidden">
+            <h2 class="text-4xl font-bold text-gray-800 mb-6">Ranking</h2>
+            <ul id="ranking-list" class="max-h-80 overflow-y-auto bg-gray-50 rounded-lg p-4 border border-gray-200 text-left mb-6">
+                <li class="p-2 text-center text-gray-500">Cargando ranking...</li>
+            </ul>
+            <button id="home-btn" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-full text-xl shadow-lg transform transition-all hover:scale-105">
+                Volver al Inicio
+            </button>
+        </div>
+
+    </div>
+    
+    <!-- Pantalla de Carga de Gemini -->
+    <div id="gemini-loading-overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-8 text-center shadow-xl">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+            <p id="gemini-loading-text" class="text-lg font-semibold text-gray-700">Procesando...</p>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Importar funciones de Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, getDocs, serverTimestamp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- Envolver todo en una función main para un manejo de errores adecuado ---
+        async function main() {
+            // --- Configuración de Firebase ---
+            // ¡TU CONFIGURACIÓN DE FIREBASE YA ESTÁ PUESTA AQUÍ!
+            // (Estos son los valores de tu captura de pantalla)
+            const firebaseConfig = {
+                                apiKey: "AIzaSyAIZGHY5f0-3GihXrm1_znIBRs53b2t1ho",
+                                authDomain: "juego-d5e35.firebaseapp.com",
+                                projectId: "juego-d5e35",
+                                storageBucket: "juego-d5e35.firebasestorage.app",
+                                messagingSenderId: "977604464111",
+                                appId: "1:977604464111:web:a012fda696a2bf5a927a1a"
+                                    };
+            // Define un ID de aplicación para tus rutas de Firestore
+            const appId = 'math-game-local'; // Puedes usar cualquier string aquí
+
+            // Habilitar logs de Firestore para depuración
+            setLogLevel('debug');
+
+            // Inicializar Firebase
+            let app, auth, db;
+            try {
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                console.log("Firebase initialized.");
+            } catch (e) {
+                console.error("Error initializing Firebase: ", e);
+                document.body.innerHTML = '<div class="text-white text-center p-10">Error al conectar con Firebase. El juego no puede cargarse.</div>';
+                return; // Ahora es legal, ya que está dentro de una función
+            }
+
+            // --- Variables Globales del Juego ---
+            let playerName = "";
+            let gameMode = ""; // 'questions' o 'timed'
+            let totalQuestions = 0;
+            let currentQuestionIndex = 0;
+            let score = 0;
+            let questions = [];
+            let timerId = null;
+            let timeLeft = 60;
+            let userId = null;
+            let gameType = "classic"; // 'classic' o 'gemini'
+
+            // --- Elementos del DOM ---
+            const screens = {
+                start: document.getElementById('start-screen'),
+                name: document.getElementById('name-screen'),
+                setup: document.getElementById('setup-screen'),
+                game: document.getElementById('game-screen'),
+                results: document.getElementById('results-screen'),
+                ranking: document.getElementById('ranking-screen')
+            };
+            
+            const playBtn = document.getElementById('play-btn');
+            const nameInput = document.getElementById('name-input');
+            const nameError = document.getElementById('name-error');
+            const nameSubmitBtn = document.getElementById('name-submit-btn');
+            const welcomeName = document.getElementById('welcome-name');
+            const setupScreen = document.getElementById('setup-screen');
+            const timedModeBtn = document.getElementById('timed-mode-btn');
+            const geminiModeBtn = document.getElementById('gemini-mode-btn'); // Nuevo botón
+            
+            const gameHeader = document.getElementById('game-header');
+            const problemText = document.getElementById('problem-text');
+            const answerInput = document.getElementById('answer-input');
+            const submitAnswerBtn = document.getElementById('submit-answer-btn');
+            
+            const resultText = document.getElementById('result-text');
+            const resultMessage = document.getElementById('result-message');
+            const showRankingBtn = document.getElementById('show-ranking-btn');
+            
+            const rankingList = document.getElementById('ranking-list');
+            const homeBtn = document.getElementById('home-btn');
+            
+            // Elementos de Carga de Gemini
+            const geminiLoadingOverlay = document.getElementById('gemini-loading-overlay');
+            const geminiLoadingText = document.getElementById('gemini-loading-text');
+
+            // --- Manejo de Autenticación ---
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    console.log("User is authenticated:", user.uid);
+                    userId = user.uid;
+                    // El usuario está listo, podemos empezar el juego.
+                } else {
+                    console.log("No user. Authenticating...");
+                    try {
+                        // Al ejecutar localmente, solo usaremos inicio anónimo.
+                        console.log("Signing in anonymously...");
+                        await signInAnonymously(auth);
+                    } catch (error) {
+                        console.error("Authentication failed:", error);
+                        screens.start.innerHTML = "<p class='text-red-500'>Error de autenticación. No se puede iniciar el juego.</p>";
+                    }
+                }
+            });
+
+            // --- Lógica de Navegación ---
+            function showScreen(screenName) {
+                Object.values(screens).forEach(screen => screen.classList.add('hidden'));
+                if (screens[screenName]) {
+                    screens[screenName].classList.remove('hidden');
+                } else {
+                    console.error(`Screen '${screenName}' not found.`);
+                }
+            }
+
+            // --- Funciones de Carga de Gemini ---
+            function showLoading(message) {
+                geminiLoadingText.textContent = message;
+                geminiLoadingOverlay.classList.remove('hidden');
+            }
+
+            function hideLoading() {
+                geminiLoadingOverlay.classList.add('hidden');
+            }
+
+            // --- Función de API de Gemini ---
+            /**
+             * Llama a la API de Gemini (gemini-2.5-flash-preview-09-2025) con reintentos.
+             * @param {object} payload - El payload para la API.
+             * @param {number} maxRetries - Número máximo de reintentos.
+             * @returns {Promise<any>} - La respuesta procesada de la API.
+             */
+            async function callGeminiAPI(payload, maxRetries = 3) {
+                const apiKey = ""; // Dejar vacío, será proporcionado por el entorno
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+                
+                let attempt = 0;
+                while (attempt < maxRetries) {
+                    try {
+                        const response = await fetch(apiUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+
+                        const result = await response.json();
+                        const candidate = result.candidates?.[0];
+
+                        if (candidate && candidate.content?.parts?.[0]?.text) {
+                            // Si se espera JSON
+                            if (payload.generationConfig?.responseMimeType === "application/json") {
+                                try {
+                                    return JSON.parse(candidate.content.parts[0].text);
+                                } catch (e) {
+                                    throw new Error("API devolvió un JSON malformado.");
+                                }
+                            }
+                            // Si se espera texto
+                            return candidate.content.parts[0].text;
+                        } else {
+                            throw new Error("Respuesta de API inválida o vacía.");
+                        }
+
+                    } catch (error) {
+                        console.error(`Error en API de Gemini (Intento ${attempt + 1}):`, error.message);
+                        attempt++;
+                        if (attempt >= maxRetries) {
+                            throw error; // Lanzar error después de reintentos
+                        }
+                        // Espera exponencial
+                        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+                    }
+                }
+            }
+
+
+            // --- Lógica del Juego ---
+
+            // 1. Inicio
+            playBtn.addEventListener('click', () => {
+                showScreen('name');
+                nameInput.focus();
+            });
+
+            // 2. Ingreso de Nombre
+            nameSubmitBtn.addEventListener('click', () => {
+                playerName = nameInput.value.trim();
+                if (playerName) {
+                    welcomeName.textContent = `¡Hola, ${playerName}!`;
+                    nameError.classList.add('hidden');
+                    showScreen('setup');
+                } else {
+                    nameError.classList.remove('hidden');
+                }
+            });
+
+            // 3. Configuración del Juego
+            setupScreen.addEventListener('click', (e) => {
+                if (e.target.dataset.questions) {
+                    gameType = 'classic';
+                    gameMode = 'questions';
+                    totalQuestions = parseInt(e.target.dataset.questions);
+                    startGame();
+                }
+            });
+
+            timedModeBtn.addEventListener('click', () => {
+                gameType = 'classic';
+                gameMode = 'timed';
+                totalQuestions = 999; // Ilimitado por tiempo
+                timeLeft = 60;
+                startGame();
+                startTimer();
+            });
+
+            // Event listener para el nuevo modo Gemini
+            geminiModeBtn.addEventListener('click', () => {
+                gameType = 'gemini';
+                gameMode = 'questions';
+                totalQuestions = 5; // 5 problemas de lógica generados por IA
+                startGeminiGame();
+            });
+
+            // 4. Iniciar el Juego (Clásico)
+            function startGame() {
+                score = 0;
+                currentQuestionIndex = 0;
+                generateQuestions(); // Genera problemas clásicos
+                displayQuestion();
+                showScreen('game');
+                answerInput.focus();
+            }
+            
+            // 4b. Iniciar el Juego (Gemini)
+            async function startGeminiGame() {
+                showLoading("✨ Generando problemas de lógica...");
+                try {
+                    questions = await generateGeminiQuestions(totalQuestions);
+                    if (questions && questions.length > 0) {
+                        score = 0;
+                        currentQuestionIndex = 0;
+                        displayQuestion();
+                        showScreen('game');
+                        answerInput.focus();
+                    } else {
+                        throw new Error("No se recibieron problemas de la API.");
+                    }
+                } catch (error) {
+                    console.error("Error al iniciar el juego de Gemini:", error);
+                    // Mostrar un modal de error sería mejor, pero por ahora usamos un log
+                    // y volvemos a la configuración.
+                    alert("Error al generar los problemas de IA. Inténtalo de nuevo."); // Usar un modal personalizado en producción
+                    showScreen('setup');
+                } finally {
+                    hideLoading();
+                }
+            }
+
+            // Generador de preguntas (Clásico)
+            function generateQuestions() {
+                questions = [];
+                for (let i = 0; i < totalQuestions; i++) {
+                    const num1 = Math.floor(Math.random() * 20) + 1;
+                    const num2 = Math.floor(Math.random() * 20) + 1;
+                    const operator = ['+', '-', 'x'][Math.floor(Math.random() * 3)];
+                    let answer;
+                    let problem;
+
+                    switch (operator) {
+                        case '+':
+                            answer = num1 + num2;
+                            problem = `${num1} + ${num2}`;
+                            break;
+                        case '-':
+                            // Evitar respuestas negativas para simplificar
+                            if (num1 < num2) {
+                                answer = num2 - num1;
+                                problem = `${num2} - ${num1}`;
+                            } else {
+                                answer = num1 - num2;
+                                problem = `${num1} - ${num2}`;
+                            }
+                            break;
+                        case 'x':
+                            // Bajar el rango para multiplicación
+                            const m1 = Math.floor(Math.random() * 12) + 1;
+                            const m2 = Math.floor(Math.random() * 12) + 1;
+                            answer = m1 * m2;
+                            problem = `${m1} x ${m2}`;
+                            break;
+                    }
+                    questions.push({ problem, answer });
+                }
+            }
+            
+            // Generador de preguntas (Gemini)
+            async function generateGeminiQuestions(count) {
+                const systemPrompt = `Genera ${count} problemas matemáticos de lógica simples para un niño de 10-12 años. Devuelve solo un JSON array de objetos, donde cada objeto tiene una 'problem' (string) y una 'answer' (número). No incluyas nada más que el JSON. Asegúrate que la respuesta sea solo un número.`;
+                
+                const payload = {
+                    contents: [{ parts: [{ text: systemPrompt }] }],
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "ARRAY",
+                            items: {
+                                type: "OBJECT",
+                                properties: {
+                                    "problem": { "type": "STRING" },
+                                    "answer": { "type": "NUMBER" }
+                                },
+                                required: ["problem", "answer"]
+                            }
+                        }
+                    }
+                };
+
+                try {
+                    const response = await callGeminiAPI(payload);
+                    console.log("Problemas generados por Gemini:", response);
+                    return response;
+                } catch (error) {
+                    console.error("Error al generar preguntas de Gemini:", error);
+                    return []; // Devolver array vacío en caso de error
+                }
+            }
+
+
+            function generateSingleQuestion() {
+                // Para modo contra el reloj (solo modo clásico)
+                generateQuestions(); // Genera una lista de 1 (totalQuestions es 999, pero solo usamos el índice 0)
+            }
+
+            function displayQuestion() {
+                if (gameMode === 'questions' && currentQuestionIndex >= totalQuestions) {
+                    endGame();
+                    return;
+                }
+                
+                if (gameMode === 'timed') { // Asumimos que timed es siempre clásico
+                    generateSingleQuestion();
+                }
+
+                const q = questions[currentQuestionIndex];
+                problemText.textContent = `${q.problem} = ?`;
+                // Ajustar tamaño de fuente para problemas de lógica
+                if (gameType === 'gemini') {
+                    problemText.classList.remove('text-5xl', 'md:text-6xl');
+                    problemText.classList.add('text-2xl', 'md:text-3xl');
+                    problemText.textContent = q.problem; // No añadir "= ?" a problemas de lógica
+                } else {
+                    problemText.classList.add('text-5xl', 'md:text-6xl');
+                    problemText.classList.remove('text-2xl', 'md:text-3xl');
+                    problemText.textContent = `${q.problem} = ?`;
+                }
+                
+                if (gameMode === 'questions') {
+                    gameHeader.textContent = `Pregunta ${currentQuestionIndex + 1} de ${totalQuestions}`;
+                }
+                
+                answerInput.value = '';
+                answerInput.focus();
+            }
+
+            // 5. Enviar Respuesta
+            submitAnswerBtn.addEventListener('click', checkAnswer);
+            answerInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    checkAnswer();
+                }
+            });
+
+            function checkAnswer() {
+                const userAnswer = parseInt(answerInput.value);
+                const correctAnswer = questions[currentQuestionIndex].answer;
+
+                if (userAnswer === correctAnswer) {
+                    score++;
+                    // Efecto visual rápido (opcional)
+                    document.body.classList.add('bg-green-400');
+                    setTimeout(() => document.body.classList.remove('bg-green-400'), 200);
+                } else {
+                    document.body.classList.add('bg-red-400');
+                    setTimeout(() => document.body.classList.remove('bg-red-400'), 200);
+                }
+
+                if (gameMode === 'questions') {
+                    currentQuestionIndex++;
+                    displayQuestion();
+                } else {
+                    // En modo contra reloj, solo aumentamos el puntaje y mostramos la siguiente
+                    currentQuestionIndex++; // Solo para referencia, no hay límite
+                    displayQuestion();
+                }
+            }
+
+            // 6. Timer
+            function startTimer() {
+                gameHeader.textContent = `Tiempo restante: ${timeLeft}s`;
+                timerId = setInterval(() => {
+                    timeLeft--;
+                    gameHeader.textContent = `Tiempo restante: ${timeLeft}s`;
+                    if (timeLeft <= 0) {
+                        endGame();
+                    }
+                }, 1000);
+            }
+
+            // 7. Fin del Juego
+            async function endGame() {
+                if (timerId) {
+                    clearInterval(timerId);
+                    timerId = null;
+                }
+
+                let result = "";
+
+                if (gameMode === 'questions') {
+                    result = `Tuviste ${score} de ${totalQuestions} correctas.`;
+                } else { // timed
+                    result = `Lograste ${score} respuestas correctas.`;
+                }
+
+                resultText.textContent = result;
+                // Preparamos el contenedor de mensaje
+                resultMessage.innerHTML = `<div class="text-gray-500">✨ Generando consejo personalizado...</div>`;
+                
+                // Mostramos la pantalla de resultados INMEDIATAMENTE
+                showScreen('results');
+
+                // Guardar en Firestore (sin esperar)
+                saveResultToFirestore().catch(err => console.error("Error guardando en Firestore:", err));
+
+                // Ahora, obtenemos el feedback de Gemini
+                try {
+                    const geminiMessage = await getGeminiFeedback();
+                    resultMessage.textContent = geminiMessage;
+                    resultMessage.classList.remove('italic', 'bg-gray-50'); // Estilo de mensaje final
+                } catch (error) {
+                    console.error("Error al obtener feedback de Gemini:", error);
+                    // Fallback a mensajes estáticos si falla la API
+                    resultMessage.textContent = getStaticFeedback();
+                    resultMessage.classList.add('text-red-500'); // Indicar que es un fallback
+                }
+            }
+            
+            // Función para obtener feedback de Gemini
+            async function getGeminiFeedback() {
+                const gameModeText = gameMode === 'timed' ? 'Contra Reloj (60s)' : `${totalQuestions} Preguntas`;
+                const gameTypeText = gameType === 'gemini' ? 'Problemas de Lógica' : 'Cálculo Rápido';
+                
+                const prompt = `Actúa como un tutor de matemáticas amigable y entusiasta. El jugador "${playerName}" acaba de terminar un juego.
+                - Modo: ${gameModeText}
+                - Tipo: ${gameTypeText}
+                - Puntaje: ${score}
+                - Total de Preguntas/Puntos: ${gameMode === 'timed' ? score : totalQuestions}
+                
+                Escribe un mensaje de 1-2 frases que sea positivo, alentador y personalizado para este resultado. 
+                ¡No uses markdown! Sé creativo y divertido.`;
+
+                const payload = {
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: {
+                        temperature: 0.8,
+                        maxOutputTokens: 100
+                    }
+                };
+                
+                return await callGeminiAPI(payload);
+            }
+
+            // Función de fallback si falla Gemini
+            function getStaticFeedback() {
+                let percentage = (gameMode === 'questions') ? (score / totalQuestions) * 100 : 0;
+                if (gameMode === 'timed') {
+                    if (score >= 20) percentage = 100;
+                    else if (score >= 10) percentage = 75;
+                    else percentage = 50;
+                }
+
+                if (percentage === 100) return "¡Perfecto! ¡Eres un genio matemático! 🤩";
+                if (percentage >= 75) return "¡Excelente trabajo! Sigue así. 👍";
+                if (percentage >= 50) return "¡Buen esfuerzo! La práctica hace al maestro. 😊";
+                return "¡No te rindas! Sigue practicando. 💪";
+            }
+
+
+            // 8. Guardar en Firestore
+            async function saveResultToFirestore() {
+                if (!db || !userId) {
+                    console.error("Firestore DB or UserID not available. Cannot save score.");
+                    return;
+                }
+                
+                const gameModeText = gameMode === 'timed' ? 'Contra Reloj (60s)' : `${totalQuestions} Preguntas`;
+                const scoreToSave = score;
+                const nameToSave = playerName;
+                
+                try {
+                    // Usamos la ruta pública para un ranking compartido
+                    const docRef = await addDoc(collection(db, `artifacts/${appId}/public/data/math-rankings`), {
+                        name: nameToSave,
+                        score: scoreToSave,
+                        mode: gameModeText,
+                        timestamp: serverTimestamp() // Para ordenar por fecha si quisiéramos
+                    });
+                    console.log("Document written with ID: ", docRef.id);
+                } catch (e) {
+                    console.error("Error adding document: ", e);
+                }
+            }
+
+            // 9. Mostrar Ranking
+            showRankingBtn.addEventListener('click', async () => {
+                await loadRanking();
+                showScreen('ranking');
+            });
+
+            async function loadRanking() {
+                if (!db) {
+                    rankingList.innerHTML = '<li>Error al conectar con la base de datos.</li>';
+                    return;
+                }
+
+                rankingList.innerHTML = '<li class="p-2 text-center text-gray-500">Cargando...</li>';
+                
+                let rankings = [];
+                try {
+                    // Consultamos la colección pública
+                    const q = query(collection(db, `artifacts/${appId}/public/data/math-rankings`));
+                    const querySnapshot = await getDocs(q);
+                    
+                    querySnapshot.forEach((doc) => {
+                        rankings.push(doc.data());
+                    });
+
+                    // Ordenamos en el cliente (JS) para evitar crear índices en Firestore
+                    rankings.sort((a, b) => b.score - a.score);
+
+                    rankingList.innerHTML = ''; // Limpiamos la lista
+                    
+                    if (rankings.length === 0) {
+                        rankingList.innerHTML = '<li class="p-2 text-center text-gray-500">¡Aún no hay puntajes! ¡Sé el primero!</li>';
+                    } else {
+                        // Mostrar solo los Top 10
+                        rankings.slice(0, 10).forEach((entry, index) => {
+                            const li = document.createElement('li');
+                            li.className = 'py-3 px-4 mb-2 rounded-lg flex justify-between items-center text-lg';
+                            // Alternar colores
+                            li.classList.add(index % 2 === 0 ? 'bg-gray-100' : 'bg-white');
+                            
+                            let medal = '';
+                            if (index === 0) medal = '🥇';
+                            else if (index === 1) medal = '🥈';
+                            else if (index === 2) medal = '🥉';
+                            
+                            li.innerHTML = `
+                                <span class="font-semibold">${medal} ${index + 1}. ${entry.name}</span>
+                                <span class="font-bold text-purple-600">${entry.score} pts <span class="text-sm text-gray-500 font-normal">(${entry.mode})</span></span>
+                            `;
+                            rankingList.appendChild(li);
+                        });
+                    }
+                } catch (e) {
+                    console.error("Error getting documents: ", e);
+                    rankingList.innerHTML = '<li class="p-2 text-center text-red-500">Error al cargar el ranking.</li>';
+                }
+            }
+
+            // 10. Volver al Inicio
+            homeBtn.addEventListener('click', () => {
+                // Reseteamos el input del nombre para el siguiente jugador
+                nameInput.value = '';
+                gameType = 'classic'; // Resetear el tipo de juego
+                showScreen('start');
+            });
+
+            // --- Estilos de Botones de Opción ---
+            document.querySelectorAll('.game-option-btn').forEach(button => {
+                button.classList.add(
+                    'w-full', 'text-white', 'font-bold', 'py-4', 'px-4', 
+                    'rounded-lg', 'text-lg', 'shadow-md', 'transform', 
+                    'transition-all', 'hover:scale-105'
+                );
+            });
+
+            // Iniciar en la pantalla de inicio
+            showScreen('start');
+
+        } // --- Fin de la función main ---
+
+        // Ejecutar la aplicación
+        main().catch(e => {
+            console.error("Error al ejecutar la aplicación principal:", e);
+            document.body.innerHTML = `<div class="text-white text-center p-10">Error fatal al cargar el juego: ${e.message}</div>`;
+        });
+    </script>
+</body>
+</html>
